@@ -1,9 +1,9 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { Configuration, OpenAIApi } = require('openai');
 require('dotenv').config();
-
-const { OpenAI } = require('openai');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -11,9 +11,10 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
 });
+const openai = new OpenAIApi(configuration);
 
 app.post('/recommend', async (req, res) => {
   const { name, occupation, interests, milestone, relationship, country, gender, age } = req.body;
@@ -30,13 +31,13 @@ Gifts should fall into the following categories:
 
 For each gift, include a thoughtful reason why it's a good fit, considering their age, gender, and relationship.`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7
     });
 
-    const aiReply = completion.choices[0].message.content;
+    const aiReply = completion.data.choices[0].message.content;
     res.json({ success: true, suggestions: aiReply });
   } catch (error) {
     console.error('Error fetching gift recommendations:', error.message);
