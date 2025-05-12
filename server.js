@@ -1,7 +1,10 @@
+const sequelize = require('./sequelize');
+const FamilyMember = require('./models/FamilyMember');
+
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const OpenAI = require('openai'); // ⬅️ updated import
+const OpenAI = require('openai');
 require('dotenv').config();
 
 const app = express();
@@ -15,6 +18,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+// 🎁 Generate gift recommendations
 app.post('/recommend', async (req, res) => {
   const { name, occupation, interests, milestone, relationship, country, gender, age } = req.body;
 
@@ -44,6 +48,28 @@ For each gift, include a thoughtful reason why it's a good fit, considering thei
   }
 });
 
-app.listen(port, () => {
-  console.log(`Gift recommendation API running at http://localhost:${port}`);
+// 👨‍👩‍👧 Add a family member
+app.post('/family/add', async (req, res) => {
+  try {
+    const newMember = await FamilyMember.create(req.body);
+    res.json({ success: true, member: newMember });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: 'Failed to add member' });
+  }
 });
+
+// 📋 Get all family members
+app.get('/family', async (req, res) => {
+  try {
+    const members = await FamilyMember.findAll();
+    res.json(members);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch members' });
+  }
+});
+
+// 🔁 Sync DB and start the server
+sequelize.sync().then(() => {
+  app.listen(port, () => {
