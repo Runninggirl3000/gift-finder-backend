@@ -73,3 +73,6 @@ app.get('/family', async (req, res) => {
 // 🔁 Sync DB and start the server
 sequelize.sync().then(() => {
   app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+});
