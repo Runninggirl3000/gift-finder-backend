@@ -1,11 +1,11 @@
-const sequelize = require('./sequelize');
-const FamilyMember = require('./models/FamilyMember');
-
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const OpenAI = require('openai');
 require('dotenv').config();
+
+const sequelize = require('./sequelize');
+const LovedOne = require('./models/LovedOne');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -13,12 +13,17 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Initialize OpenAI with the new client format
+// ✅ Sync the LovedOne table
+sequelize.sync({ alter: true })
+  .then(() => console.log('✅ Database synced'))
+  .catch(err => console.error('❌ Sync error:', err));
+
+// ✅ Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-// 🎁 Generate gift recommendations
+// 🎁 Gift Recommendation Endpoint
 app.post('/recommend', async (req, res) => {
   const { name, occupation, interests, milestone, relationship, country, gender, age } = req.body;
 
@@ -48,31 +53,18 @@ For each gift, include a thoughtful reason why it's a good fit, considering thei
   }
 });
 
-// 👨‍👩‍👧 Add a family member
-app.post('/family/add', async (req, res) => {
+// 👀 View all loved ones
+app.get('/loved-ones', async (req, res) => {
   try {
-    const newMember = await FamilyMember.create(req.body);
-    res.json({ success: true, member: newMember });
+    const lovedOnes = await LovedOne.findAll();
+    res.json({ success: true, data: lovedOnes });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: 'Failed to add member' });
+    console.error('Error fetching loved ones:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch loved ones' });
   }
 });
 
-// 📋 Get all family members
-app.get('/family', async (req, res) => {
-  try {
-    const members = await FamilyMember.findAll();
-    res.json(members);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch members' });
-  }
-});
-
-// 🔁 Sync DB and start the server
-sequelize.sync().then(() => {
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
+// 🔌 Start server
+app.listen(port, () => {
+  console.log(`Gift recommendation API running at http://localhost:${port}`);
 });
