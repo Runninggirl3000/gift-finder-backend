@@ -20,7 +20,7 @@ function isTwoWeeksAway(dateStr) {
   const birthday = new Date(dateStr);
   birthday.setFullYear(today.getFullYear()); // adjust to this year
   const diff = Math.ceil((birthday - today) / (1000 * 60 * 60 * 24));
-  return diff === 14;
+  return diff <= 365; // or `return true` for testing all
 }
 
 async function runReminders() {
