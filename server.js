@@ -68,6 +68,20 @@ app.put('/loved-ones/:id', async (req, res) => {
   }
 });
 
+// ❌ Delete loved one by ID (NEW)
+app.delete('/loved-ones/:id', async (req, res) => {
+  try {
+    const deleted = await LovedOne.destroy({ where: { id: req.params.id } });
+    if (deleted === 0) {
+      return res.status(404).json({ success: false, message: 'Loved one not found' });
+    }
+    res.json({ success: true, message: 'Loved one deleted' });
+  } catch (error) {
+    console.error('Error deleting:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete loved one' });
+  }
+});
+
 // 🎁 AI Gift Recommendation Endpoint
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -83,11 +97,11 @@ Gifts should fall into the following categories:
 2. Under $50
 3. Feeling generous (up to $500)
 
-For each gift, include a thoughtful reason why it's a good fit, considering their age, gender, and relationship.`;
+For each gift, include a thoughtful reason why it's a good fit, considering their age, gender, and relationship. Bold the gifts without bolding the reasons.`;
 
   try {
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7
     });
