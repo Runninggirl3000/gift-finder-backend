@@ -90,7 +90,7 @@ app.post('/recommend', async (req, res) => {
 
   const prompt = `Suggest three birthday gifts for a person named ${name}.
 They are a ${age}-year-old ${gender} ${occupation}, and their interests include ${interests}.
-They recently ${milestone || 'experienced a meaningful life event'}.
+They recently ${milestone}.
 Their relationship to the user is: ${relationship}.
 Gifts should fall into the following categories:
 1. Under $25
