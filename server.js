@@ -97,7 +97,7 @@ Gifts should fall into the following categories:
 2. Under $50
 3. Feeling generous (up to $500)
 
-For each gift, include a thoughtful reason why it's a good fit, considering their age, gender, and relationship. Bold the gifts without bolding the reasons.`;
+For each gift, include a thoughtful reason why it's a good fit, considering their age, gender, and relationship. Do without the preamble and go straight into listing the gifts.`;
 
   try {
     const completion = await openai.chat.completions.create({
