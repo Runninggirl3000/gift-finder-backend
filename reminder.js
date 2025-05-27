@@ -21,15 +21,29 @@ function isTwoWeeksAway(dateStr) {
   birthday.setFullYear(today.getFullYear()); // ensure it's this year's birthday
 
   const diff = Math.ceil((birthday - today) / (1000 * 60 * 60 * 24));
-  return diff === 0;
+  return diff >= 13 && diff <= 14;
 }
 
 async function runReminders() {
   await sequelize.sync();
-
   const all = await LovedOne.findAll();
+
+  console.log("📋 Checking birthday formats:");
   for (const person of all) {
-    if (!person.birthday || !isTwoWeeksAway(person.birthday)) continue;
+    console.log(`${person.name}: ${person.birthday}`);
+
+    if (!person.birthday || isNaN(new Date(person.birthday))) {
+      console.warn(`⚠️ Skipping ${person.name}: invalid or missing birthday.`);
+      continue;
+    }
+
+    const birthdayThisYear = new Date(person.birthday);
+    birthdayThisYear.setFullYear(new Date().getFullYear());
+
+    const diff = Math.ceil((birthdayThisYear - new Date()) / (1000 * 60 * 60 * 24));
+    console.log(`→ ${person.name}'s birthday is in ${diff} day(s)`);
+
+    if (!isTwoWeeksAway(person.birthday)) continue;
 
     const recPromptData = {
       name: person.name,
@@ -46,7 +60,7 @@ async function runReminders() {
       const recRes = await axios.post(API_URL, recPromptData);
       const ideas = recRes.data.suggestions;
 
-      const message = `🎂 *Reminder:* ${person.name}'s birthday is in 2 weeks! (${new Date(person.birthday).toLocaleDateString()})
+      const message = `🎂 *Reminder:* ${person.name}'s birthday is in 2 weeks! (${birthdayThisYear.toLocaleDateString()})
 
 🎁 *Gift Ideas:*
 ${ideas}
@@ -54,8 +68,9 @@ ${ideas}
 🔗 [View & Edit](${DASHBOARD_URL}${person.id})`;
 
       await sendTelegramMessage(message);
+      console.log(`✅ Sent reminder for ${person.name}`);
     } catch (err) {
-      console.error(`❌ Error processing ${person.name}:`, err.message);
+      console.error(`❌ Error processing ${person.name}:`, err.response?.data || err.message);
     }
   }
 
